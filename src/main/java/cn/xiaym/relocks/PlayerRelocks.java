@@ -1,6 +1,6 @@
 package cn.xiaym.relocks;
 
-import cn.xiaym.relocks.packets.c2s.RelockC2SPacket;
+import cn.xiaym.relocks.packet.RelockC2SPacket;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -9,12 +9,13 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.players.PlayerUnlock;
-import net.minecraft.server.players.PlayerUnlocks;
 
 import java.util.*;
 
 public class PlayerRelocks implements ModInitializer {
+
     public static final String MOD_ID = "player_relocks";
+    public static final Map<Holder<PlayerUnlock>, List<Holder<PlayerUnlock>>> unlockChildrenMap = new HashMap<>();
 
     @Override
     public void onInitialize() {
@@ -22,9 +23,11 @@ public class PlayerRelocks implements ModInitializer {
         PayloadTypeRegistry.playC2S().register(RelockC2SPacket.TYPE, RelockC2SPacket.CODEC);
 
         // Server Handling
-        List<Holder<PlayerUnlock>> unlocks = new ArrayList<>();
         for (Holder<PlayerUnlock> holder : BuiltInRegistries.PLAYER_UNLOCK.asHolderIdMap()) {
-            unlocks.add(holder);
+            if (holder.value().parent().isPresent()) {
+                Holder<PlayerUnlock> parent = holder.value().parent().get();
+                unlockChildrenMap.computeIfAbsent(parent, k -> new ArrayList<>()).add(holder);
+            }
         }
 
         ServerPlayNetworking.registerGlobalReceiver(RelockC2SPacket.TYPE, (packet, context) -> {
@@ -34,20 +37,21 @@ public class PlayerRelocks implements ModInitializer {
             }
 
             String key = requested.value().key();
-            for (Holder<PlayerUnlock> unlockHolder : unlocks) {
-                Optional<Holder<PlayerUnlock>> parent = unlockHolder.value().parent();
+            List<Holder<PlayerUnlock>> children = unlockChildrenMap.getOrDefault(requested, Collections.emptyList());
 
-                if (parent.isPresent() && Objects.equals(parent.get().value().key(), key) && context.player()
-                        .isUnlocked(unlockHolder)) {
+            for (Holder<PlayerUnlock> child : children) {
+                if (child != null && context.player().isUnlocked(child)) {
                     context.player().sendSystemMessage(Component.translatable("player-relocks.error.has-child")
-                            .withStyle(ChatFormatting.RED));
+                        .withStyle(ChatFormatting.RED));
                     return;
                 }
             }
 
-            context.player().playerUnlocks.revoke(packet.unlock());
-            context.player().sendSystemMessage(Component.translatable("player-relocks.info.done")
-                    .withStyle(ChatFormatting.GREEN).append(Component.translatable("unlocks.unlock." + key + ".name")));
+            context.player().playerUnlocks.revoke(requested);
+            context.player().sendSystemMessage(
+                Component.translatable("player-relocks.info.done", Component.translatable("unlocks.unlock." + key + ".name"))
+                .withStyle(ChatFormatting.GREEN)
+            );
         });
     }
 }

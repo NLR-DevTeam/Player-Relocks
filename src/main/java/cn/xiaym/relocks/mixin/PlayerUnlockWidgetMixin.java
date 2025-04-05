@@ -1,6 +1,6 @@
-package cn.xiaym.relocks.mixins;
+package cn.xiaym.relocks.mixin;
 
-import cn.xiaym.relocks.packets.c2s.RelockC2SPacket;
+import cn.xiaym.relocks.packet.RelockC2SPacket;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.unlocks.PlayerUnlockWidget;
@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerUnlockWidget.class)
 public class PlayerUnlockWidgetMixin {
+
     @Shadow
     private boolean unlocked;
 
