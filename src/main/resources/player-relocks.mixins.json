@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "cn.xiaym.relocks.mixins",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "PlayerUnlockWidgetMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

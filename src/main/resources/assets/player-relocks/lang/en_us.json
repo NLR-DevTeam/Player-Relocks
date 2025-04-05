@@ -1,0 +1,4 @@
+{
+  "player-relocks.error.has-child": "You can only re-lock ones without any unlocked child!",
+  "player-relocks.info.done": "Successfully revoked: "
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "player-relocks",
+  "version": "${version}",
+  "name": "PlayerRelocks",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/player-relocks/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "cn.xiaym.relocks.PlayerRelocks"
+    ]
+  },
+  "mixins": [
+    "player-relocks.mixins.json"
+  ],
+  "accessWidener": "player-relocks.accesswidener",
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "1.21.6-alpha.25.14.craftmine"
+  }
+}
