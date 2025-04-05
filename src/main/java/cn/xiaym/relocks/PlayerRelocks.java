@@ -6,14 +6,12 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.players.PlayerUnlock;
 import net.minecraft.server.players.PlayerUnlocks;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class PlayerRelocks implements ModInitializer {
     public static final String MOD_ID = "player_relocks";
@@ -24,14 +22,10 @@ public class PlayerRelocks implements ModInitializer {
         PayloadTypeRegistry.playC2S().register(RelockC2SPacket.TYPE, RelockC2SPacket.CODEC);
 
         // Server Handling
-        @SuppressWarnings("unchecked") List<Holder<PlayerUnlock>> unlocks = Arrays.stream(PlayerUnlocks.class.getFields())
-                .filter(it -> it.getType() == Holder.class).map(it -> {
-                    try {
-                        return (Holder<PlayerUnlock>) it.get(null);
-                    } catch (IllegalAccessException e) {
-                        throw new RuntimeException(e);
-                    }
-                }).toList();
+        List<Holder<PlayerUnlock>> unlocks = new ArrayList<>();
+        for (Holder<PlayerUnlock> holder : BuiltInRegistries.PLAYER_UNLOCK.asHolderIdMap()) {
+            unlocks.add(holder);
+        }
 
         ServerPlayNetworking.registerGlobalReceiver(RelockC2SPacket.TYPE, (packet, context) -> {
             Holder<PlayerUnlock> requested = packet.unlock();
