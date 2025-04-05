@@ -1,11 +1,9 @@
 package cn.xiaym.relocks;
 
 import cn.xiaym.relocks.packets.c2s.RelockC2SPacket;
-import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
@@ -23,9 +21,7 @@ public class PlayerRelocks implements ModInitializer {
     @Override
     public void onInitialize() {
         // Register packets :D
-        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
-            PayloadTypeRegistry.playC2S().register(RelockC2SPacket.TYPE, RelockC2SPacket.CODEC);
-        }
+        PayloadTypeRegistry.playC2S().register(RelockC2SPacket.TYPE, RelockC2SPacket.CODEC);
 
         // Server Handling
         @SuppressWarnings("unchecked") List<Holder<PlayerUnlock>> unlocks = Arrays.stream(PlayerUnlocks.class.getFields())
