@@ -1,4 +1,4 @@
 {
   "player-relocks.error.has-child": "你只能取消解锁没有已解锁子项的项！",
-  "player-relocks.info.done": "已成功取消: "
+  "player-relocks.info.done": "已成功取消: [%s]"
 }
