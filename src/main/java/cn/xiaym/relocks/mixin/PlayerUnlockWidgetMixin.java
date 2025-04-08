@@ -15,7 +15,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerUnlockWidget.class)
 public class PlayerUnlockWidgetMixin {
-
     @Shadow
     private boolean unlocked;
 
