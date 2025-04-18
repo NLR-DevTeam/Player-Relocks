@@ -1,7 +1,11 @@
 package cn.xiaym.relocks;
 
+import cn.xiaym.relocks.data.GlobalDataManager;
 import cn.xiaym.relocks.packet.RelockC2SPacket;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
@@ -10,14 +14,16 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerUnlock;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.storage.LevelResource;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 public class PlayerRelocks implements ModInitializer {
     public static final String MOD_ID = "player_relocks";
-    public static final Map<Holder<PlayerUnlock>, List<Holder<PlayerUnlock>>> unlockChildrenMap = new HashMap<>();
+    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    public static final Map<Holder<PlayerUnlock>, List<Holder<PlayerUnlock>>> UNLOCK_CHILDREN_MAP = new HashMap<>();
 
     @Override
     public void onInitialize() {
@@ -34,7 +40,7 @@ public class PlayerRelocks implements ModInitializer {
         for (Holder<PlayerUnlock> holder : BuiltInRegistries.PLAYER_UNLOCK.asHolderIdMap()) {
             if (holder.value().parent().isPresent()) {
                 Holder<PlayerUnlock> parent = holder.value().parent().get();
-                unlockChildrenMap.computeIfAbsent(parent, k -> new ArrayList<>()).add(holder);
+                UNLOCK_CHILDREN_MAP.computeIfAbsent(parent, k -> new ArrayList<>()).add(holder);
             }
         }
 
@@ -47,7 +53,7 @@ public class PlayerRelocks implements ModInitializer {
             }
 
             String key = requested.value().key();
-            List<Holder<PlayerUnlock>> children = unlockChildrenMap.getOrDefault(requested, Collections.emptyList());
+            List<Holder<PlayerUnlock>> children = UNLOCK_CHILDREN_MAP.getOrDefault(requested, Collections.emptyList());
 
             for (Holder<PlayerUnlock> child : children) {
                 if (child != null && player.isUnlocked(child)) {
@@ -57,16 +63,36 @@ public class PlayerRelocks implements ModInitializer {
                 }
             }
 
-            // Calculate how many exp points should we give back.
-            int giveBackPoints = 0;
-            for (int i = 0, level = player.experienceLevel, price = requested.value().unlockPrice(); i < price; i++) {
-                giveBackPoints += Player.getXpNeededForLevel(level + i);
+            player.playerUnlocks.revoke(requested);
+
+            var costsMap = GlobalDataManager.forPlayer(player.getGameProfile().getId()).unlockCosts;
+            if (costsMap.containsKey(requested)) {
+                int giveBackPoints = costsMap.remove(requested);
+                System.out.println(giveBackPoints);
+                System.out.println(giveBackPoints * Config.expGiveBackRatio);
+                player.giveExperiencePoints((int) (giveBackPoints * Config.expGiveBackRatio));
             }
 
-            player.playerUnlocks.revoke(requested);
-            player.giveExperiencePoints((int) (giveBackPoints * Config.expGiveBackRatio));
             player.sendSystemMessage(Component.translatable("player-relocks.info.done", Component.translatable("unlocks.unlock." + key + ".name"))
                     .withStyle(ChatFormatting.GREEN));
+        });
+
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            Path globalDataPath = server.getWorldPath(LevelResource.ROOT).resolve("player-relocks.json");
+
+            try {
+                GlobalDataManager.init(globalDataPath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        ServerLifecycleEvents.BEFORE_SAVE.register((server, b1, b2) -> {
+            try {
+                GlobalDataManager.save();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         });
     }
 }

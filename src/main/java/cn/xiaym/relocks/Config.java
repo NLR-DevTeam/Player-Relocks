@@ -1,7 +1,5 @@
 package cn.xiaym.relocks;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.fabricmc.loader.api.FabricLoader;
@@ -12,7 +10,6 @@ import java.nio.file.Path;
 
 public class Config {
     private static final Path CONF_FILE = FabricLoader.getInstance().getConfigDir().resolve("player-relocks.json");
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static float expGiveBackRatio = 0.0f;
 
     protected static void init() throws IOException {
@@ -29,6 +26,6 @@ public class Config {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("expGiveBackRatio", expGiveBackRatio);
 
-        Files.writeString(CONF_FILE, GSON.toJson(jsonObject));
+        Files.writeString(CONF_FILE, PlayerRelocks.GSON.toJson(jsonObject));
     }
 }
