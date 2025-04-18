@@ -68,8 +68,6 @@ public class PlayerRelocks implements ModInitializer {
             var costsMap = GlobalDataManager.forPlayer(player.getGameProfile().getId()).unlockCosts;
             if (costsMap.containsKey(requested)) {
                 int giveBackPoints = costsMap.remove(requested);
-                System.out.println(giveBackPoints);
-                System.out.println(giveBackPoints * Config.expGiveBackRatio);
                 player.giveExperiencePoints((int) (giveBackPoints * Config.expGiveBackRatio));
             }
 
