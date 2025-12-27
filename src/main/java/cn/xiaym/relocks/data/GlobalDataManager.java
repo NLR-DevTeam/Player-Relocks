@@ -28,12 +28,16 @@ public class GlobalDataManager {
             Files.createFile(savePath);
             save();
         } else {
-            JsonObject jsonObject = JsonParser.parseString(Files.readString(savePath)).getAsJsonObject();
-            for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
-                UUID uuid = UUID.fromString(entry.getKey());
-                PlayerData playerData = PlayerData.deserialize(entry.getValue().getAsJsonObject());
+            try {
+                JsonObject jsonObject = JsonParser.parseString(Files.readString(savePath)).getAsJsonObject();
+                for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+                    UUID uuid = UUID.fromString(entry.getKey());
+                    PlayerData playerData = PlayerData.deserialize(entry.getValue().getAsJsonObject());
 
-                PLAYER_DATA_MAP.put(uuid, playerData);
+                    PLAYER_DATA_MAP.put(uuid, playerData);
+                }
+            } catch (Exception ex) {
+                PlayerRelocks.LOGGER.error("Failed to load relocks data!", ex);
             }
         }
     }
@@ -41,6 +45,10 @@ public class GlobalDataManager {
     public static void save() throws IOException {
         JsonObject jsonObject = new JsonObject();
         for (Map.Entry<UUID, PlayerData> entry : PLAYER_DATA_MAP.entrySet()) {
+            if (entry.getValue().unlockCosts.isEmpty()) {
+                continue;
+            }
+
             jsonObject.add(entry.getKey().toString(), entry.getValue().serialize());
         }
 

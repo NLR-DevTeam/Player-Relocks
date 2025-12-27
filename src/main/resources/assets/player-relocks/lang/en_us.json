@@ -1,4 +1,7 @@
 {
   "player-relocks.error.has-child": "You can only re-lock ones without any unlocked child!",
-  "player-relocks.info.done": "Successfully revoked: [%s]"
+  "player-relocks.info.done": "Successfully revoked: [%s]",
+  "player-relocks.info.no-record": "Successfully revoked [%s], but no experience was returned due to no unlocking record",
+  "player-relocks.client.tooltip.hold-shift": "Hold Shift and click to relock",
+  "player-relocks.client.tooltip.click-to-relock": "Click to relock"
 }

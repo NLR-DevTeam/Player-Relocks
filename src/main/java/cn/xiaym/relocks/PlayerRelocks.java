@@ -15,6 +15,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerUnlock;
 import net.minecraft.world.level.storage.LevelResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -23,6 +25,7 @@ import java.util.*;
 public class PlayerRelocks implements ModInitializer {
     public static final String MOD_ID = "player_relocks";
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    public static final Logger LOGGER = LoggerFactory.getLogger("PlayerRelocks");
     public static final Map<Holder<PlayerUnlock>, List<Holder<PlayerUnlock>>> UNLOCK_CHILDREN_MAP = new HashMap<>();
 
     @Override
@@ -66,12 +69,13 @@ public class PlayerRelocks implements ModInitializer {
             player.playerUnlocks.revoke(requested);
 
             var costsMap = GlobalDataManager.forPlayer(player.getGameProfile().getId()).unlockCosts;
-            if (costsMap.containsKey(requested)) {
+            boolean hasKey = costsMap.containsKey(requested);
+            if (hasKey) {
                 int giveBackPoints = costsMap.remove(requested);
-                player.giveExperiencePoints((int) (giveBackPoints * Config.expGiveBackRatio));
+                player.giveExperiencePoints(Math.max((int) (giveBackPoints * Config.expGiveBackRatio), 0));
             }
 
-            player.sendSystemMessage(Component.translatable("player-relocks.info.done", Component.translatable("unlocks.unlock." + key + ".name"))
+            player.sendSystemMessage(Component.translatable("player-relocks.info." + (hasKey || Config.expGiveBackRatio <= 0 ? "done" : "no-record"), Component.translatable("unlocks.unlock." + key + ".name"))
                     .withStyle(ChatFormatting.GREEN));
         });
 
